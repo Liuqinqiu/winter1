@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无尽冬日WJTI人格测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background: #1a1a1f;
+            color: #fff;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .container {
+            display: none;
+            background: #25252f;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #58a6ff;
+        }
+
+        .desc {
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            display: block;
+            width: 200px;
+            height: 50px;
+            line-height: 50px;
+            background: #3178C6;
+            color: #fff;
+            font-size: 18px;
+            border: none;
+            border-radius: 12px;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        .start-btn:hover {
+            background: #4b98f2;
+        }
+
+        .question {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            background: #333340;
+            padding: 14px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .option:hover {
+            background: #444455;
+        }
+
+        .progress {
+            text-align: center;
+            margin: 20px 0;
+            color: #aaa;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .result-card {
+            background: #2b2b38;
+            padding: 40px 30px;
+            border-radius: 16px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .result-card.ssr {
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 20px #ffd70066;
+            background: linear-gradient(135deg, #3a3a4a, #2b2b38);
+        }
+
+        .result-tag {
+            display: inline-block;
+            background: #3178C6;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .result-card.ssr .result-tag {
+            background: #ffcc00;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .result-name {
+            font-size: 26px;
+            color: #58a6ff;
+            margin-bottom: 20px;
+        }
+
+        .result-desc {
+            line-height: 1.8;
+            font-size: 15px;
+            color: #eee;
+            text-align: left;
+        }
+
+        .restart-btn {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: #3178C6;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .restart-btn:hover {
+            background: #4b98f2;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 首页 -->
+<div class="container active" id="welcome">
+    <div class="title">无尽冬日WJTI人格测试</div>
+    <div class="desc">测测你在服里到底是什么妖魔鬼怪<br>20题暴露你的真实游戏人格</div>
+    <button class="start-btn" onclick="startTest()">开始整活</button>
+</div>
+
+<!-- 测试题 -->
+<div class="container" id="quiz">
+    <div class="progress" id="progress"></div>
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+</div>
+
+<!-- 结果页 -->
+<div class="container" id="result">
+    <div class="title">你的测试结果</div>
+    <div class="result-box">
+        <div class="result-card" id="resultCard">
+            <div class="result-tag" id="resultTag"></div>
+            <div class="result-name" id="resultName"></div>
+            <div class="result-desc" id="resultDesc"></div>
+        </div>
+        <button class="restart-btn" onclick="restart()">再来一把</button>
+    </div>
+</div>
+
+<script>
+    // 人格库
+    const personalities = [
+        { key: "fight", name: "无尽冬日嘴强领主", desc: "嘴炮天花板，输出全靠吼，在无尽生存全凭一张嘴" },
+        { key: "gossip", name: "无尽冬日村头情报处主任", desc: "全服第一八卦通，哪个联盟撕逼、哪个大佬冲榜、哪个主播谈恋爱，比当事人还清楚" },
+        { key: "cp", name: "无尽冬日恋爱大师", desc: "世界频道总能看到你的身影，到处cpdd，不关心盟里纠纷和未来发展，只想处cp，看到漂亮妹妹或腹肌帅哥走不动道" },
+        { key: "war", name: "无尽冬日战争贩子", desc: "精力旺盛的战斗狂魔，上线只为找人激情互殴，不打不舒服斯基，能动手绝不废话" },
+        { key: "save", name: "无尽冬日屯屯鼠", desc: "把游戏玩成双十一囤货人，看着仓库一格格填满比打架还爽，属于囤完就有安全感的类型" },
+        { key: "farm", name: "无尽冬日陶渊明", desc: "采菊东篱下，悠然见冰原，自带归隐气质，一心种田，主打安稳度日" },
+        { key: "rich", name: "无尽冬日撒币大师", desc: "花钱从不抠搜，资源从不吝啬，主打一个豪爽大气，动不动就给联盟家人发红包，给大伙开仓放量，国战报销军费" },
+        { key: "gan", name: "无尽冬日肝帝", desc: "你的日活数据一个人拉高了整个服务器的平均值。你零点上线零点下线，盟友怀疑你有三个人轮班。你的手机长年插着充电线，你的眼圈比炉子烧的煤还黑。你的账号数据比99%的氪金玩家还猛，但你一分钱没充，全靠命换的。你不是在肝，你已经和这个游戏融为一体了。你的血液里流的不是血，是体力值。" },
+        { key: "teach", name: "无尽冬日课代表", desc: "稀有的WJTI人格，全服行走的攻略百科，新活动新玩法研究得明明白白，热衷于整理干货、分享技巧，谁有不懂问他一句，直接给你讲得通透又好懂" },
+        { key: "multi", name: "无尽冬日分身大师", desc: "大号冲榜、小号种田、三号当间谍、四号处cp，一个人就是一支军队" },
+        { key: "call", name: "无尽冬日人形报警器", desc: "打架不一定行，但摇人速度永远第一，一挨打立刻全频道呼救，主打一个人多力量大" },
+        { key: "fo", name: "无尽冬日佛系玩家", desc: "随缘上线，佛系发育，不追排名不惹是非，安安静静做个透明人" },
+        { key: "manage", name: "无尽冬日牛马", desc: "没错无尽冬日天选打工人就是你了，别人在睡觉你在铺旗子，别人在cpdd你在给盟友发资源，每次国战跟对面谈和、分配区里资源、分配车头车身，大小事务都离不开你" },
+        { key: "free", name: "无尽冬日分币不掏者", desc: "零氪零氪，别人零点就氪，你零点也不氪，主打一分钱也不花，别想从老子兜里拿走一分" },
+        { key: "boss", name: "无尽冬日霸总", desc: "稀有的WJTI人格，你不是盟主但你比盟主还像盟主。你上线的方式不是签到，是巡视。你的战力是全盟第一梯队，你的发言是全盟最终解释权。你说打谁就打谁，你说几点集合没人敢迟到，你说“这炉子我帮你掏回来”的时候全盟安全感瞬间拉满。你的资源永远溢出，你拉人进盟叫“招人”，你踢人出盟叫“优化”。你不发红包但所有人跟着你有肉吃，你偶尔甩一句“开仓了”全盟直接沸腾。你是暴风雪里最大的那棵树——所有人都在你后面躲风。退你一个人，等于退半个联盟。", ssr: true },
+        { key: "gold", name: "无尽冬日印钞机", desc: "超超超超稀有的WJTI人格，氪金对于你来说已经不是多少的问题了，而是哪里有需要哪里就有你的身影，你上线不是来打游戏的，是来发资源的。你的背包是联盟的公共金库，你的充值记录是全服的GDP。你一个人养活了整个王国的发育，你的钱包撑起了全服的战力天花板。你为什么这么大方？因为你根本不在乎这点钱——对你来说这不叫送，叫散零钱。", ssr: true },
+        { key: "girl", name: "无尽冬日刘亦菲", desc: "你一发言频道全盟安静三秒，不是因为你战力高，是因为你头像太好看大家在偷偷截图。你发个“早”都有八个人秒回，你说句“有人找乔伊搭子吗”瞬间排起长队。你的联盟申请从来没被拒绝过，你的求援从来没有人忽略过。你是联盟里的颜值天花板、所有人想组队但不好意思开口的那个人。你可能不太会玩，但没关系——这个游戏需要你，因为有你在盟里在线率直接翻倍。" },
+        { key: "boy", name: "无尽冬日吴彦祖", desc: "你一开麦全联盟群心率飙升，低音炮配一句“我来了”直接让三个女盟友掉线。你从来不用求人上车，因为你的队伍永远是满的，而且永远有人主动给你递资源。你说“我先下了”的时候盟群瞬间冷场，你说“我上了”的时候在线人数直接翻倍。你的战报没人看数据，大家只看你的头像。你打国战不需要战术，因为对面女玩家已经在问你微信了。末日最大的威胁不是暴风雪，是你的个人魅力" },
+        { key: "skill", name: "无尽冬日六边形战士", desc: "稀有的WJTI人格，全维度拉满，六边形无短板，拥有超强的游戏理解、游戏操作、策略思维和指挥能力，兵工厂、燃霜、国战、霜龙你战无不胜，令敌人闻风丧胆，你是那种让策划怀疑人生的玩家。别人还在问“这个英雄怎么用”，你已经把TA的隐藏机制、最优搭配、伤害期望值全算明白了发在群里了。你说“这个能打”的时候没人质疑，你说“这个废了”的时候氪佬含泪把刚满星的英雄收进仓库。", ssr: true },
+        { key: "talk", name: "无尽冬日赛后诸葛亮", desc: "你从不在战前发言，但战后复盘你永远第一个跳出来。“我早就说了应该先打这里”“当时要是听我的早赢了”——问题是你当时什么都没说。你的语音条永远在结算页面之后才出现，你的战术分析永远精准地迟到30分钟。你是联盟里的事后军师、马后炮之王、战报区话最多的人。" },
+        { key: "hr", name: "无尽冬日HR", desc: "联盟专业招人小能手，天天在世界频道挖人、拉萌新、搞招募，擅长忽悠（不是）说服大佬入伙，把招人当成正经工作，联盟人口全靠他一手撑起" }
+    ];
+
+    // 搞笑改版题目（意思不变，更整活）
+    const questions = [
+        { q: "刚上线你第一件事一般是干啥？", o: [
+            { t: "逛世界频道，看谁不爽直接对线", k: "fight" },
+            { t: "翻聊天记录，看看今天有啥大瓜", k: "gossip" },
+            { t: "发个cpdd，看看有没有有缘人", k: "cp" },
+            { t: "直接找邻居宣战，开打就完事", k: "war" }
+        ]},
+        { q: "盟里吵起来了，你的反应是？", o: [
+            { t: "当场加入战场，主打一个嘴不闲着", k: "fight" },
+            { t: "默默吃瓜，顺便记下来跟人唠", k: "gossip" },
+            { t: "劝大家别吵，要不一起处对象吧", k: "cp" },
+            { t: "别逼逼，有种出去单挑", k: "war" }
+        ]},
+        { q: "仓库空了一小格，你内心是？", o: [
+            { t: "空就空，打架够用就行", k: "fight" },
+            { t: "好奇别人仓库都囤了些啥好东西", k: "gossip" },
+            { t: "只要有人陪玩，空不空无所谓", k: "cp" },
+            { t: "瞬间焦虑，马上出去抢满", k: "save" }
+        ]},
+        { q: "新活动一开，你优先冲什么？", o: [
+            { t: "去频道吐槽策划设计得离谱", k: "fight" },
+            { t: "打听大佬们又冲了多少战力", k: "gossip" },
+            { t: "找个好看的搭子一起混活动", k: "cp" },
+            { t: "打架冲榜，不拿名次不罢休", k: "war" }
+        ]},
+        { q: "有人问你资源够不够，你通常？", o: [
+            { t: "先怼两句再说，主打气势", k: "fight" },
+            { t: "顺便套话，打听对方盟里情况", k: "gossip" },
+            { t: "够不够不重要，有人一起玩就行", k: "cp" },
+            { t: "资源？抢来的才香，问就是没有", k: "war" }
+        ]},
+        { q: "你一天大概挂多久游戏？", o: [
+            { t: "想上就上，主要任务是吵架", k: "fight" },
+            { t: "偶尔登一下，纯吃瓜观众", k: "gossip" },
+            { t: "随缘在线，有人叫我才玩", k: "cp" },
+            { t: "睁眼就上号，闭眼才下线", k: "gan" }
+        ]},
+        { q: "萌新公屏问“这游戏咋玩”，你会？", o: [
+            { t: "这都不会？怕不是来搞笑的", k: "fight" },
+            { t: "简单回两句，顺便查户口", k: "gossip" },
+            { t: "加个好友，我带你慢慢玩", k: "cp" },
+            { t: "直接教打架，教完拉去开战", k: "skill" }
+        ]},
+        { q: "你同时开几个号在玩？", o: [
+            { t: "一个号都玩不明白，专心喷人", k: "fight" },
+            { t: "就一个号，方便全服吃瓜", k: "gossip" },
+            { t: "一个号，专门用来处CP", k: "cp" },
+            { t: "N个号轮换，一人撑起一支队伍", k: "multi" }
+        ]},
+        { q: "正在种田突然被人打了，你第一反应？", o: [
+            { t: "公屏直接开喷，问候全家", k: "fight" },
+            { t: "赶紧查对方背景，有啥靠山", k: "gossip" },
+            { t: "火速找CP哭诉，求保护", k: "cp" },
+            { t: "直接拉兵反打，谁怕谁", k: "war" }
+        ]},
+        { q: "发现自己完全打不过对方，你会？", o: [
+            { t: "嘴上绝不认输，继续硬刚", k: "fight" },
+            { t: "记下来这个瓜，以后慢慢唠", k: "gossip" },
+            { t: "撒娇卖萌求盟里大佬罩着", k: "cp" },
+            { t: "全服摇人，主打人多力量大", k: "call" }
+        ]},
+        { q: "联盟组织国战，你的定位是？", o: [
+            { t: "战前公屏疯狂嘲讽对面", k: "fight" },
+            { t: "围观两边大佬，默默吃瓜", k: "gossip" },
+            { t: "找队友组队挂机混奖励", k: "cp" },
+            { t: "带头冲锋，全场核心战力", k: "boss" }
+        ]},
+        { q: "管理在群里发任务，你一般？", o: [
+            { t: "嫌麻烦，先吐槽一顿再说", k: "fight" },
+            { t: "看到当没看到，佛系划水", k: "fo" },
+            { t: "有人陪我做我就做", k: "cp" },
+            { t: "认真执行，联盟打工人本人", k: "manage" }
+        ]},
+        { q: "你对氪金这件事的真实态度是？", o: [
+            { t: "一分不充，白嫖才是王道", k: "free" },
+            { t: "爱咋咋地，不强求不攀比", k: "fo" },
+            { t: "好看就行，战力无所谓", k: "girl" },
+            { t: "该氪就氪，只要能打赢", k: "gold" }
+        ]},
+        { q: "有人公屏说你玩得菜，你会？", o: [
+            { t: "当场喷回去，我菜关你屁事", k: "talk" },
+            { t: "笑一笑，回头当笑话讲", k: "gossip" },
+            { t: "找CP撑腰，让TA帮我骂", k: "cp" },
+            { t: "直接约战，用实力说话", k: "skill" }
+        ]},
+        { q: "没事干的时候你最喜欢？", o: [
+            { t: "世界频道随机对线，快乐嘴强", k: "fight" },
+            { t: "蹲频道吃瓜，哪里有瓜去哪里", k: "gossip" },
+            { t: "跟CP聊天挂机，到处逛", k: "cp" },
+            { t: "刷体力清野，找人打架", k: "war" }
+        ]},
+        { q: "联盟缺人，你会主动帮忙吗？", o: [
+            { t: "招人的顺便跟对面吵一架", k: "fight" },
+            { t: "挖大佬顺便吃瓜聊八卦", k: "gossip" },
+            { t: "只招头像好看的一起玩", k: "boy" },
+            { t: "疯狂挖高战，壮大联盟", k: "hr" }
+        ]},
+        { q: "打赢一场架之后，你会？", o: [
+            { t: "公屏炫耀，疯狂输出", k: "fight" },
+            { t: "把战报发群里，大家一起吃瓜", k: "gossip" },
+            { t: "截图发给CP求夸奖", k: "cp" },
+            { t: "不休息，继续找下一个", k: "war" }
+        ]},
+        { q: "打输架心态崩了，你会？", o: [
+            { t: "嘴硬到底：我只是没认真", k: "talk" },
+            { t: "分析战力差距，当个新瓜", k: "gossip" },
+            { t: "委屈巴巴找CP求安慰", k: "cp" },
+            { t: "默默复盘，下次必报仇", k: "skill" }
+        ]},
+        { q: "看到有人发干货攻略，你会？", o: [
+            { t: "疯狂挑刺，显得自己很懂", k: "fight" },
+            { t: "看看有没有隐藏瓜可以吃", k: "gossip" },
+            { t: "收藏一下，跟CP装大佬", k: "cp" },
+            { t: "认真学习，提升自己操作", k: "teach" }
+        ]},
+        { q: "打完仗有人总结战局，你？", o: [
+            { t: "我早知道了，就是当时没说", k: "talk" },
+            { t: "默默记下来，以后吹牛用", k: "gossip" },
+            { t: "输赢无所谓，开心最重要", k: "fo" },
+            { t: "当场指出问题，下次这么打", k: "skill" }
+        ]}
+    ];
+
+    let current = 0;
+    let score = {};
+
+    function startTest() {
+        show("quiz");
+        current = 0;
+        score = {};
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = questions[current];
+        document.getElementById("progress").innerText = `第 ${current+1}/${questions.length} 题`;
+        document.getElementById("question").innerText = q.q;
+        const opt = document.getElementById("options");
+        opt.innerHTML = "";
+        q.o.forEach(item => {
+            let div = document.createElement("div");
+            div.className = "option";
+            div.innerText = item.t;
+            div.onclick = () => select(item.k);
+            opt.appendChild(div);
+        });
+    }
+
+    function select(k) {
+        score[k] = (score[k] || 0) + 1;
+        current++;
+        if (current >= questions.length) {
+            showResult();
+        } else {
+            renderQuestion();
+        }
+    }
+
+    function showResult() {
+        show("result");
+        let maxKey = "";
+        let maxVal = 0;
+        for (let k in score) {
+            if (score[k] > maxVal) {
+                maxVal = score[k];
+                maxKey = k;
+            }
+        }
+        const res = personalities.find(p => p.key === maxKey);
+        const card = document.getElementById("resultCard");
+        
+        card.classList.remove("ssr");
+        if (res.ssr) {
+            card.classList.add("ssr");
+            document.getElementById("resultTag").innerText = "SSR 稀有人格";
+        } else {
+            document.getElementById("resultTag").innerText = "普通人格";
+        }
+
+        document.getElementById("resultName").innerText = res.name;
+        document.getElementById("resultDesc").innerText = res.desc;
+    }
+
+    function restart() {
+        show("welcome");
+    }
+
+    function show(id) {
+        document.querySelectorAll(".container").forEach(c => c.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+    }
+</script>
+</body>
+</html>
